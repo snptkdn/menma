@@ -1,5 +1,4 @@
 use clap::{Parser, Subcommand};
-use config::Config;
 use home_dir::*;
 use std::path::Path;
 mod add;
@@ -31,17 +30,15 @@ fn main() -> anyhow::Result<()> {
     match args.command {
         Commands::Add { title, tags } => {
             let config = config::config(config_path)?;
-            add::add(config.dir_path, title, &tags);
-            Ok(())
+            add::add(config.dir_path, title, &tags)
         }
         Commands::Ls { tags } => {
             let config = config::config(config_path)?;
-            ls::ls(config.dir_path, tags, &config.editor);
-            Ok(())
+            ls::ls(config.dir_path, tags, &config.editor)
         }
         Commands::Init => {
             let config_path = &Path::new("~/.config/menma/config.json").expand_home()?;
-            init::init(&config_path)
+            init::init(config_path)
         }
     }
 }

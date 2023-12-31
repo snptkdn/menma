@@ -1,13 +1,7 @@
 use anyhow::Result;
-use crossterm::{
-    cursor::{Hide, MoveTo, Show},
-    event::{read, Event, KeyCode},
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-    ExecutableCommand,
-};
 use dialoguer::{theme::ColorfulTheme, Select};
 use regex::Regex;
-use std::{io::stdout, path::PathBuf};
+use std::path::PathBuf;
 
 use crate::exec;
 
@@ -19,7 +13,7 @@ pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Resul
         let file_path = file?.path();
         if target_tags
             .iter()
-            .all(|tag| tags(&file_path.file_name().unwrap().to_str().unwrap()).contains(tag))
+            .all(|tag| tags(file_path.file_name().unwrap().to_str().unwrap()).contains(tag))
         {
             target_files.push(file_path);
         }
@@ -33,12 +27,12 @@ pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Resul
 fn tags(file_name: &str) -> Vec<String> {
     let re = Regex::new(r"#(\w+)").unwrap();
 
-    re.captures_iter(&file_name)
+    re.captures_iter(file_name)
         .map(|cap| cap[1].to_string())
         .collect()
 }
 
-pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> {
+pub fn select_event(target_files: &[PathBuf], editor: &String) -> Result<()> {
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select file")
         .items(
