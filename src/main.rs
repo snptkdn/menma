@@ -1,10 +1,12 @@
 use clap::{Parser, Subcommand};
+use config::Config;
 use home_dir::*;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 mod add;
 mod config;
-mod ls;
 mod exec;
+mod init;
+mod ls;
 
 /// Simple program to greet a person
 #[derive(Parser, Debug)]
@@ -18,24 +20,28 @@ struct Args {
 enum Commands {
     Add { title: String, tags: Vec<String> },
     Ls { tags: Vec<String> },
+    Init,
 }
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-
-    let config = config::config(&Path::new("~/.config/menma/config.json").expand_home()?)?;
-    if cfg!(debug_assertions) {
-        println!("config info: {:?}", config);
-    }
+    
+    let config_path = &Path::new("~/.config/menma/config.json").expand_home()?;
 
     match args.command {
         Commands::Add { title, tags } => {
+            let config = config::config(config_path)?;
             add::add(config.dir_path, title, &tags);
             Ok(())
         }
         Commands::Ls { tags } => {
+            let config = config::config(config_path)?;
             ls::ls(config.dir_path, tags, &config.editor);
             Ok(())
+        }
+        Commands::Init => {
+            let config_path = &Path::new("~/.config/menma/config.json").expand_home()?;
+            init::init(&config_path)
         }
     }
 }
