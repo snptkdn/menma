@@ -14,8 +14,6 @@ pub struct Config {
 }
 
 pub fn config(config_file: &PathBuf) -> Result<Config> {
-    println!("{:?}", config_file);
-
     let file = match File::open(config_file) {
         Ok(file) => file,
         Err(_) => {
