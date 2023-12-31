@@ -11,7 +11,7 @@ use std::{io::stdout, path::PathBuf};
 
 use crate::exec;
 
-pub fn ls(dir_path: PathBuf, target_tags: Vec<String>) -> Result<()> {
+pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Result<()> {
     let files = std::fs::read_dir(dir_path)?;
     let mut target_files = Vec::new();
 
@@ -22,7 +22,7 @@ pub fn ls(dir_path: PathBuf, target_tags: Vec<String>) -> Result<()> {
         }
     }
 
-    select_event(&target_files)?;
+    select_event(&target_files, editor)?;
 
     Ok(())
 }
@@ -35,14 +35,14 @@ fn tags(file_name: &str) -> Vec<String> {
         .collect()
 }
 
-pub fn select_event(target_files: &Vec<PathBuf>) -> Result<()> {
+pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> {
 
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select file")
         .items(&target_files.iter().map(|file| file.file_name().unwrap().to_str().unwrap()).collect::<Vec<&str>>())
         .interact()?;
 
-    exec::call_subprocess(&target_files[selection])?;
+    exec::call_subprocess(&target_files[selection], editor)?;
     Ok(())
 }
 

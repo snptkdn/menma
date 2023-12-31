@@ -9,6 +9,7 @@ use std::path::PathBuf;
 #[derive(Deserialize, Debug)]
 pub struct Config {
     pub dir_path: PathBuf,
+    pub editor: String,
 }
 
 pub fn config(config_file: &PathBuf) -> Result<Config> {

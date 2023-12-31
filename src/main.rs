@@ -34,7 +34,7 @@ fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Commands::Ls { tags } => {
-            ls::ls(config.dir_path, tags);
+            ls::ls(config.dir_path, tags, &config.editor);
             Ok(())
         }
     }
