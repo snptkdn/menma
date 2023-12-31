@@ -1,4 +1,5 @@
 use anyhow::Result;
+use dialoguer::{theme::ColorfulTheme, Select};
 use crossterm::{
     cursor::{Hide, MoveTo, Show},
     event::{read, Event, KeyCode},
@@ -35,52 +36,13 @@ fn tags(file_name: &str) -> Vec<String> {
 }
 
 pub fn select_event(target_files: &Vec<PathBuf>) -> Result<()> {
-    let mut stdout = stdout();
-    let mut selected = 0;
 
-    stdout.execute(EnterAlternateScreen)?;
-    enable_raw_mode()?;
-    stdout.execute(Hide)?;
+    let selection = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Select file")
+        .items(&target_files.iter().map(|file| file.file_name().unwrap().to_str().unwrap()).collect::<Vec<&str>>())
+        .interact()?;
 
-    loop {
-        for (index, item) in target_files.iter().enumerate() {
-            if index == selected {
-                stdout.execute(MoveTo(0, index as u16))?;
-                println!("> {}", item.file_name().unwrap().to_str().unwrap());
-            } else {
-                stdout.execute(MoveTo(0, index as u16))?;
-                println!("  {}", item.file_name().unwrap().to_str().unwrap());
-            }
-        }
-
-        match read()? {
-            Event::Key(event) => match event.code {
-                KeyCode::Char('k') => {
-                    if selected > 0 {
-                        selected -= 1;
-                    }
-                }
-                KeyCode::Char('j') => {
-                    if selected < target_files.len() - 1 {
-                        selected += 1;
-                    }
-                }
-                KeyCode::Enter => {
-                    exec::call_subprocess(&target_files[selected])?;
-                    break;
-                }
-                KeyCode::Char('q') => {
-                    break;
-                }
-                _ => (),
-            },
-            _ => (),
-        }
-    }
-
-    disable_raw_mode()?;
-    stdout.execute(Show)?;
-    stdout.execute(LeaveAlternateScreen)?;
+    exec::call_subprocess(&target_files[selection])?;
     Ok(())
 }
 
