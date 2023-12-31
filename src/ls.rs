@@ -1,23 +1,23 @@
-use regex::Regex;
 use anyhow::Result;
 use crossterm::{
     cursor::{Hide, MoveTo, Show},
     event::{read, Event, KeyCode},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, Clear, ClearType},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
-use std::io::{stdout, Write};
+use regex::Regex;
+use std::{io::stdout, path::PathBuf};
 
+use crate::exec;
 
-pub fn ls(dir_path: String, target_tags: Vec<String>) -> Result<()> {
+pub fn ls(dir_path: PathBuf, target_tags: Vec<String>) -> Result<()> {
     let files = std::fs::read_dir(dir_path)?;
     let mut target_files = Vec::new();
 
     for file in files {
-        let file_name = file?.file_name().into_string().unwrap();
-        if target_tags.iter().all(|tag| tags(&file_name).contains(tag)) {
-            target_files.push(file_name);
+        let file_path = file?.path();
+        if target_tags.iter().all(|tag| tags(&file_path.file_name().unwrap().to_str().unwrap()).contains(tag)) {
+            target_files.push(file_path);
         }
     }
 
@@ -26,15 +26,15 @@ pub fn ls(dir_path: String, target_tags: Vec<String>) -> Result<()> {
     Ok(())
 }
 
-fn tags(file_name: &String) -> Vec<String> {
+fn tags(file_name: &str) -> Vec<String> {
     let re = Regex::new(r"#(\w+)").unwrap();
 
     re.captures_iter(&file_name)
-      .map(|cap| cap[1].to_string())
-      .collect()
+        .map(|cap| cap[1].to_string())
+        .collect()
 }
 
-pub fn select_event(target_files: &Vec<String>) -> Result<()> {
+pub fn select_event(target_files: &Vec<PathBuf>) -> Result<()> {
     let mut stdout = stdout();
     let mut selected = 0;
 
@@ -46,38 +46,34 @@ pub fn select_event(target_files: &Vec<String>) -> Result<()> {
         for (index, item) in target_files.iter().enumerate() {
             if index == selected {
                 stdout.execute(MoveTo(0, index as u16))?;
-                println!("> {}", item);
+                println!("> {}", item.file_name().unwrap().to_str().unwrap());
             } else {
                 stdout.execute(MoveTo(0, index as u16))?;
-                println!("  {}", item);
+                println!("  {}", item.file_name().unwrap().to_str().unwrap());
             }
         }
 
         match read()? {
-            Event::Key(event) => {
-                match event.code {
-                    KeyCode::Char('k') => {
-                        if selected > 0 {
-                            selected -= 1;
-                        }
+            Event::Key(event) => match event.code {
+                KeyCode::Char('k') => {
+                    if selected > 0 {
+                        selected -= 1;
                     }
-                    KeyCode::Char('j') => {
-                        if selected < target_files.len() - 1 {
-                            selected += 1;
-                        }
-                    }
-                    KeyCode::Enter => {
-                        println!("Selected: {}", target_files[selected]);
-                        if target_files[selected] == "Exit" {
-                            break;
-                        }
-                    }
-                    KeyCode::Char('q') => {
-                        break;
-                    }
-                    _ => (),
                 }
-            }
+                KeyCode::Char('j') => {
+                    if selected < target_files.len() - 1 {
+                        selected += 1;
+                    }
+                }
+                KeyCode::Enter => {
+                    exec::call_subprocess(&target_files[selected])?;
+                    break;
+                }
+                KeyCode::Char('q') => {
+                    break;
+                }
+                _ => (),
+            },
             _ => (),
         }
     }
@@ -99,5 +95,3 @@ mod tests {
         assert_eq!(tags, vec!["aws", "dev", "console"])
     }
 }
-
-

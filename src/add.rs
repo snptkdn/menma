@@ -1,10 +1,10 @@
-use std::fs::File;
+use std::{fs::File, path::PathBuf};
 use chrono::Local;
 use anyhow::Result;
 
-pub fn add(dir_path: String, title: String, tags: &Vec<String>) -> Result<()> {
+pub fn add(dir_path: PathBuf, title: String, tags: &Vec<String>) -> Result<()> {
     let tags = tags.join("#");
-    File::create(format!("{}/{}_{}_#{}.md", dir_path, date(), title, tags))?;
+    File::create(format!("{}/{}_{}_#{}.md", dir_path.to_str().unwrap(), date(), title, tags))?;
     return Ok(());
 }
 
