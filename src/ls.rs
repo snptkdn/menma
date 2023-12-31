@@ -1,11 +1,11 @@
 use anyhow::Result;
-use dialoguer::{theme::ColorfulTheme, Select};
 use crossterm::{
     cursor::{Hide, MoveTo, Show},
     event::{read, Event, KeyCode},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
+use dialoguer::{theme::ColorfulTheme, Select};
 use regex::Regex;
 use std::{io::stdout, path::PathBuf};
 
@@ -17,7 +17,10 @@ pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Resul
 
     for file in files {
         let file_path = file?.path();
-        if target_tags.iter().all(|tag| tags(&file_path.file_name().unwrap().to_str().unwrap()).contains(tag)) {
+        if target_tags
+            .iter()
+            .all(|tag| tags(&file_path.file_name().unwrap().to_str().unwrap()).contains(tag))
+        {
             target_files.push(file_path);
         }
     }
@@ -36,13 +39,25 @@ fn tags(file_name: &str) -> Vec<String> {
 }
 
 pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> {
-
     let selection = Select::with_theme(&ColorfulTheme::default())
         .with_prompt("Select file")
-        .items(&target_files.iter().map(|file| file.file_name().unwrap().to_str().unwrap()).collect::<Vec<&str>>())
-        .interact()?;
+        .items(
+            &target_files
+                .iter()
+                .map(|file| file.file_name().unwrap().to_str().unwrap())
+                .collect::<Vec<&str>>(),
+        )
+        .interact_opt()?;
 
-    exec::call_subprocess(&target_files[selection], editor)?;
+    match selection {
+        Some(index) => {
+            exec::call_subprocess(&target_files[index], editor)?;
+        }
+        None => {
+            println!("Canceled");
+        }
+    }
+
     Ok(())
 }
 
