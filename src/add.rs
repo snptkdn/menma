@@ -1,10 +1,19 @@
-use std::{fs::File, path::PathBuf};
-use chrono::Local;
+use crate::exec;
 use anyhow::Result;
+use chrono::Local;
+use std::{fs::File, path::PathBuf};
 
-pub fn add(dir_path: PathBuf, title: String, tags: &[String]) -> Result<()> {
+pub fn add(dir_path: PathBuf, title: String, tags: &[String], editor: String) -> Result<()> {
     let tags = tags.join("#");
-    File::create(format!("{}/{}_{}_#{}.md", dir_path.to_str().unwrap(), date(), title, tags))?;
+    let path = format!(
+        "{}/{}_{}_#{}.md",
+        &dir_path.to_str().unwrap(),
+        date(),
+        title,
+        tags
+    );
+    File::create(&path)?;
+    exec::call_subprocess(&PathBuf::from(path), &editor)?;
     Ok(())
 }
 

@@ -24,13 +24,13 @@ enum Commands {
 
 fn main() -> anyhow::Result<()> {
     let args = Args::parse();
-    
+
     let config_path = &Path::new("~/.config/menma/config.json").expand_home()?;
 
     match args.command {
         Commands::Add { title, tags } => {
             let config = config::config(config_path)?;
-            add::add(config.dir_path, title, &tags)
+            add::add(config.dir_path, title, &tags, config.editor)
         }
         Commands::Ls { tags } => {
             let config = config::config(config_path)?;
