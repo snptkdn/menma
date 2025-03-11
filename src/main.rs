@@ -17,7 +17,7 @@ struct Args {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    Add { title: String, tags: Vec<String> },
+    Add { title: String, project: String, tags: Vec<String> },
     Ls { tags: Vec<String> },
     Init,
 }
@@ -28,9 +28,9 @@ fn main() -> anyhow::Result<()> {
     let config_path = &Path::new("~/.config/menma/config.json").expand_home()?;
 
     match args.command {
-        Commands::Add { title, tags } => {
+        Commands::Add { title, project, tags } => {
             let config = config::config(config_path)?;
-            add::add(config.dir_path, title, &tags, config.editor)
+            add::add(config.dir_path, title, project, &tags, config.editor)
         }
         Commands::Ls { tags } => {
             let config = config::config(config_path)?;

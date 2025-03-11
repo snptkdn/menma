@@ -1,39 +1,34 @@
 use anyhow::Result;
-use dialoguer::{theme::ColorfulTheme, Select};
-use regex::Regex;
+use dialoguer::{theme::ColorfulTheme, FuzzySelect};
+// use regex::Regex;
+use std::path::Path;
 use std::path::PathBuf;
 
 use crate::exec;
 
 pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Result<()> {
-    let files = std::fs::read_dir(dir_path)?;
-    let mut target_files = Vec::new();
+    let files = std::fs::read_dir(&dir_path)?;
+    let projects: Vec<PathBuf> = files
+        .into_iter()
+        .map(|entry| entry.unwrap().path())
+        .filter(|path| Path::is_dir(path))
+        .collect();
 
-    for file in files {
-        let file_path = file?.path();
-        if target_tags
-            .iter()
-            .all(|tag| tags(file_path.file_name().unwrap().to_str().unwrap()).contains(tag))
-        {
-            target_files.push(file_path);
-        }
-    }
-
-    select_event(&target_files, editor)?;
+    select_project(dir_path, &projects, editor)?;
 
     Ok(())
 }
 
-fn tags(file_name: &str) -> Vec<String> {
-    let re = Regex::new(r"#(\w+)").unwrap();
+// fn tags(file_name: &str) -> Vec<String> {
+//     let re = Regex::new(r"#(\w+)").unwrap();
+//
+//     re.captures_iter(file_name)
+//         .map(|cap| cap[1].to_string())
+//         .collect()
+// }
 
-    re.captures_iter(file_name)
-        .map(|cap| cap[1].to_string())
-        .collect()
-}
-
-pub fn select_event(target_files: &[PathBuf], editor: &String) -> Result<()> {
-    let selection = Select::with_theme(&ColorfulTheme::default())
+pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> {
+    let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
         .with_prompt("Select file")
         .items(
             &target_files
@@ -51,6 +46,32 @@ pub fn select_event(target_files: &[PathBuf], editor: &String) -> Result<()> {
             println!("Canceled");
         }
     }
+
+    Ok(())
+}
+
+pub fn select_project(dir_path: PathBuf, projects: &Vec<PathBuf>, editor: &String) -> Result<()> {
+    let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
+        .with_prompt("Select project")
+        .items(
+            &projects
+                .iter()
+                .map(|project: &PathBuf| project.to_str().unwrap())
+                .collect::<Vec<&str>>(),
+        )
+        .interact_opt()?;
+
+    let files = match selection {
+        Some(index) => std::fs::read_dir(&projects[index])?,
+        None => std::fs::read_dir(dir_path)?,
+    };
+
+    let target_files: Vec<PathBuf> = files
+        .into_iter()
+        .map(|entry| entry.unwrap().path()) // DirEntry から PathBuf を取得
+        .collect();
+
+    select_event(&target_files, editor)?;
 
     Ok(())
 }
