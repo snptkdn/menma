@@ -30,11 +30,11 @@ fn main() -> anyhow::Result<()> {
     match args.command {
         Commands::Add { title, project, tags } => {
             let config = config::config(config_path)?;
-            add::add(config.dir_path, title, project, &tags, config.editor)
+            add::add(config.dir_path, title, project, &tags, &config.editor_map)
         }
         Commands::Ls { tags } => {
             let config = config::config(config_path)?;
-            ls::ls(config.dir_path, tags, &config.editor)
+            ls::ls(config.dir_path, tags, &config.editor_map)
         }
         Commands::Init => {
             let config_path = &Path::new("~/.config/menma/config.json").expand_home()?;

@@ -4,9 +4,10 @@ use dialoguer::{theme::ColorfulTheme, FuzzySelect};
 use std::path::Path;
 use std::path::PathBuf;
 
+use crate::config::Editor;
 use crate::exec;
 
-pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Result<()> {
+pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor_map: &Vec<Editor>) -> Result<()> {
     let files = std::fs::read_dir(&dir_path)?;
     let projects: Vec<PathBuf> = files
         .into_iter()
@@ -14,7 +15,7 @@ pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Resul
         .filter(|path| Path::is_dir(path))
         .collect();
 
-    select_project(dir_path, &projects, editor)?;
+    select_project(dir_path, &projects, editor_map)?;
 
     Ok(())
 }
@@ -27,7 +28,7 @@ pub fn ls(dir_path: PathBuf, target_tags: Vec<String>, editor: &String) -> Resul
 //         .collect()
 // }
 
-pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> {
+pub fn select_event(target_files: &Vec<PathBuf>, editor_map: &Vec<Editor>) -> Result<()> {
     let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
         .with_prompt("Select file")
         .items(
@@ -40,7 +41,7 @@ pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> 
 
     match selection {
         Some(index) => {
-            exec::call_subprocess(&target_files[index], editor)?;
+            exec::call_subprocess(&target_files[index], editor_map)?;
         }
         None => {
             println!("Canceled");
@@ -50,7 +51,7 @@ pub fn select_event(target_files: &Vec<PathBuf>, editor: &String) -> Result<()> 
     Ok(())
 }
 
-pub fn select_project(dir_path: PathBuf, projects: &Vec<PathBuf>, editor: &String) -> Result<()> {
+pub fn select_project(dir_path: PathBuf, projects: &Vec<PathBuf>, editor_map: &Vec<Editor>) -> Result<()> {
     let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
         .with_prompt("Select project")
         .items(
@@ -71,7 +72,7 @@ pub fn select_project(dir_path: PathBuf, projects: &Vec<PathBuf>, editor: &Strin
         .map(|entry| entry.unwrap().path()) // DirEntry から PathBuf を取得
         .collect();
 
-    select_event(&target_files, editor)?;
+    select_event(&target_files, editor_map)?;
 
     Ok(())
 }

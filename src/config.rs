@@ -8,9 +8,16 @@ use std::io::BufReader;
 use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Editor {
+    pub ext: String,
+    pub command: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub dir_path: PathBuf,
     pub editor: String,
+    pub editor_map: Vec<Editor>
 }
 
 pub fn config(config_file: &PathBuf) -> Result<Config> {

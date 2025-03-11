@@ -5,7 +5,7 @@ use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
 
-use crate::config::Config;
+use crate::config::{Config, Editor};
 
 pub fn init(dir_path: &PathBuf) -> Result<()> {
     if dir_path.exists() {
@@ -57,6 +57,7 @@ fn input_config_params() -> Result<Config> {
 
     Ok(Config {
         dir_path: PathBuf::from(store_path),
-        editor,
+        editor: editor.clone(),
+        editor_map: vec![Editor{ext: "md".to_string(), command: editor.clone()}]
     })
 }
